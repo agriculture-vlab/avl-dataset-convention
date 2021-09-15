@@ -1,23 +1,24 @@
 # The MIT License (MIT)
-# Copyright (c) 2021 by the xcube development team and contributors
+# Copyright (c) 2021 by the ESA AVL development team and contributors
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in
-# the Software without restriction, including without limitation the rights to
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-# of the Software, and to permit persons to whom the Software is furnished to do
-# so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
 
 from typing import Dict, Any, Tuple, List, Union
 
@@ -37,31 +38,29 @@ DEFAULT_METADATA = dict(
 )
 
 
-def new_dataset(width: int = 320,
-                height: int = 180,
-                x_name: str = 'lon',
-                y_name: str = 'lat',
-                x_dtype: np.dtype = 'float64',
-                y_dtype: np.dtype = None,
-                x_units: str = 'degrees_east',
-                y_units: str = 'degrees_north',
-                x_res: float = 1.0,
-                y_res: float = None,
-                x_start: float = 0,
-                y_start: float = 0,
-                inverse_y: bool = False,
-                time_name: str = 'time',
-                time_dtype: np.dtype = 'datetime64[s]',
-                time_units: str = 'seconds since 1970-01-01T00:00:00',
-                time_calendar: str = 'proleptic_gregorian',
-                time_periods: str = 5,
-                time_res: str = "1D",
-                time_start: str = '2010-01-01T00:00:00',
-                use_cftime: bool = False,
-                drop_bounds: bool = False,
-                variables: List[Tuple[str, str, Dict[str, Any]]] = None,
-                crs: Union[str, pyproj.CRS] = None,
-                metadata: Dict[str, Any] = None):
+def new_dataset(
+        xy_size: Tuple[int, int] = (3600, 1800),
+        xy_tile_size: Union[int, Tuple[int, int]] = None,
+        xy_names: Tuple[str, str] = ('lon', 'lat'),
+        xy_dtype: np.dtype = 'float64',
+        xy_units: Union[str, Tuple[str, str]] = ('degrees_east',
+                                                 'degrees_north'),
+        xy_res: Union[float, Tuple[float, float]] = 360 / 3600,
+        xy_start: Tuple[float, float] = (-180, -90),
+        inverse_y: bool = False,
+        time_name: str = 'time',
+        time_dtype: np.dtype = 'datetime64[s]',
+        time_units: str = 'seconds since 1970-01-01T00:00:00',
+        time_calendar: str = 'proleptic_gregorian',
+        time_periods: int = 5,
+        time_res: str = "1D",
+        time_start: str = '2010-01-01T00:00:00',
+        use_cftime: bool = False,
+        drop_bounds: bool = False,
+        variables: List[Tuple[str, str, Dict[str, Any]]] = None,
+        crs: Union[str, pyproj.CRS] = None,
+        metadata: Dict[str, Any] = None
+) -> xr.Dataset:
     """
     Create a new sample dataset. Useful for creating cubes templates with
     predefined coordinate variables and metadata.
@@ -71,19 +70,20 @@ def new_dataset(width: int = 320,
         2. numpy data type
         3. variable metadata
 
-    :param title: A title. Defaults to 'Test Cube'.
-    :param width: Horizontal number of grid cells. Defaults to 360.
-    :param height: Vertical number of grid cells. Defaults to 180.
-    :param x_name: Name of the x coordinate variable. Defaults to 'lon'.
-    :param y_name: Name of the y coordinate variable. Defaults to 'lat'.
-    :param x_dtype: Data type of x coordinates. Defaults to 'float64'.
-    :param y_dtype: Data type of y coordinates. Defaults to 'float64'.
-    :param x_units: Units of the x coordinates. Defaults to 'degrees_east'.
-    :param y_units: Units of the y coordinates. Defaults to 'degrees_north'.
-    :param x_start: Minimum x value. Defaults to -180.
-    :param y_start: Minimum y value. Defaults to -90.
-    :param x_res: Spatial resolution in x-direction. Defaults to 1.0.
-    :param y_res: Spatial resolution in y-direction. Defaults to 1.0.
+    :param xy_size: Number of spatial x,y grid cells.
+        Defaults to (3600, 1800).
+    :param xy_tile_size: Optional spatial tile size in grid cells.
+        Defaults to None (= automatic chunking).
+    :param xy_names: Names of the x,y coordinate variables.
+        Defaults to ('lon', 'lat).
+    :param xy_dtype: Data type of both x and y coordinate.
+        Defaults to 'float64'.
+    :param xy_units: Units of the x,y coordinates.
+        Defaults to ('degrees_east', 'degrees_north').
+    :param xy_start: Minimum x,y values.
+        Defaults to (-180, -90).
+    :param xy_res: Spatial resolution in x,y directions.
+        Defaults to 1.0.
     :param inverse_y: Whether to create an inverse y axis. Defaults to False.
     :param time_name: Name of the time coordinate variable. Defaults to 'time'.
     :param time_periods: Number of time steps. Defaults to 5.
@@ -110,19 +110,25 @@ def new_dataset(width: int = 320,
     :param metadata: Metadata to be included in global attributes.
     :return: A dataset instance
     """
-    y_dtype = y_dtype if y_dtype is not None else y_dtype
-    y_res = y_res if y_res is not None else x_res
-    if width < 0 or height < 0 or x_res <= 0.0 or y_res <= 0.0:
-        raise ValueError()
-    if time_periods < 0:
-        raise ValueError()
-
+    if isinstance(xy_size, int):
+        xy_size = xy_size, xy_size
+    if isinstance(xy_tile_size, int):
+        xy_tile_size = xy_tile_size, xy_tile_size
+    if isinstance(xy_units, str):
+        xy_units = xy_units, xy_units
+    if isinstance(xy_res, (int, float)):
+        xy_res = xy_res, xy_res
+    if isinstance(crs, str):
+        crs = pyproj.CRS.from_string(crs)
     if use_cftime and time_dtype is not None:
         raise ValueError('If "use_cftime" is True,'
                          ' "time_dtype" must not be set.')
 
-    if isinstance(crs, str):
-        crs = pyproj.CRS.from_string(crs)
+    width, height = xy_size
+    x_name, y_name = xy_names
+    x_units, y_units = xy_units
+    x_start, y_start = xy_start
+    x_res, y_res = xy_res
 
     x_is_lon = x_name == 'lon' or x_units == 'degrees_east'
     y_is_lat = y_name == 'lat' or y_units == 'degrees_north'
@@ -134,9 +140,9 @@ def new_dataset(width: int = 320,
     y_res_05 = 0.5 * y_res
 
     x_data = np.linspace(x_start + x_res_05, x_end - x_res_05,
-                         width, dtype=x_dtype)
+                         width, dtype=xy_dtype)
     y_data = np.linspace(y_start + y_res_05, y_end - y_res_05,
-                         height, dtype=y_dtype)
+                         height, dtype=xy_dtype)
 
     x_var = xr.DataArray(x_data, dims=x_name, attrs=dict(units=x_units))
     y_var = xr.DataArray(y_data, dims=y_name, attrs=dict(units=y_units))
@@ -183,14 +189,14 @@ def new_dataset(width: int = 320,
 
         x_bnds_data = np.zeros((width, 2), dtype=np.float64)
         x_bnds_data[:, 0] = np.linspace(x_start, x_end - x_res,
-                                        width, dtype=x_dtype)
+                                        width, dtype=xy_dtype)
         x_bnds_data[:, 1] = np.linspace(x_start + x_res, x_end,
-                                        width, dtype=x_dtype)
+                                        width, dtype=xy_dtype)
         y_bnds_data = np.zeros((height, 2), dtype=np.float64)
         y_bnds_data[:, 0] = np.linspace(y_start, y_end - x_res,
-                                        height, dtype=y_dtype)
+                                        height, dtype=xy_dtype)
         y_bnds_data[:, 1] = np.linspace(y_start + x_res, y_end,
-                                        height, dtype=y_dtype)
+                                        height, dtype=xy_dtype)
         if inverse_y:
             y_bnds_data = y_bnds_data[::-1, ::-1]
 
@@ -254,7 +260,23 @@ def new_dataset(width: int = 320,
     if crs is not None:
         data_vars['crs'] = xr.DataArray(0, attrs=crs.to_cf())
 
-    return xr.Dataset(data_vars=data_vars, coords=coords, attrs=attrs)
+    dataset = xr.Dataset(data_vars=data_vars,
+                         coords=coords,
+                         attrs=attrs)
+
+    chunks = {
+        x_name: 'auto',
+        y_name: 'auto',
+        'time': 'auto',
+    }
+    if xy_tile_size is not None:
+        x_tile_size, y_tile_size = xy_tile_size
+        chunks.update({
+            x_name: x_tile_size,
+            y_name: y_tile_size,
+        })
+
+    return dataset.chunk(chunks=chunks)
 
 
 def get_geospatial_attrs(
