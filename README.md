@@ -1,2 +1,3 @@
 # avl-dataset-convention
-Provides dataset examples for the AVL project
+
+Provides a dataset convention and example datasets for the AVL project.
