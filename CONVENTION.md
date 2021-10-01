@@ -1,0 +1,156 @@
+# AVL Dataset Convention
+
+Version 1.0
+
+## Introduction
+
+The purpose of this document is to define a convention how datasets generated 
+by the AVL project should look like. The goal of the convention is to ease 
+access to data, make it compliant to existing data standards, make it 
+comprehensive and understandable, minimize the effort to ingest the data into 
+users’ processing, visualisation, and analysis code. Short, the goal is to 
+make AVL datasets analysis-ready.
+The intention is neither to invent any new data formats nor trying to establish 
+new "standards". Instead, the AVL conventions solely build on existing, 
+popular, well-established data formats and data standards.
+Due to the fundamental difference of gridded and vector datasets, we provide 
+two separate conventions.
+
+In this document, the verbs _must_, _should_, and _may_ have a special meaning 
+when used to describe conventions. A _must_ is a mandatory requirement that 
+must be fulfilled, _should_ is optional but always recommended, and 
+_may_ is optional and recommended in cases (like good to have).
+
+## Gridded Dataset Conventions
+
+### Data Model and Format
+
+The data model for AVL gridded datasets is a subset of the 
+[Unidata Common Data Model] (CDM). The CDM has originally been established for 
+NetCDF (Network Common Data Form) but is implemented also for the OPenDAP 
+protocol and the HDF and Zarr formats. Other common gridded data models can be 
+easily translated into the CDM, for example GeoTIFF.
+
+AVL gridded datasets must fully comply to the _Climate and Forecast
+Metadata Conventions_, short [CF Conventions]. The following sections in this 
+chapter describe how these conventions are tailored and applied to AVL datasets.
+By default, AVL gridded datasets are made available in the [Zarr format v2] as 
+this format is ideal for Cloud storage, e.g. Object Storage such as AWS S3 and 
+can be easily converted to other formats such as NetCDF or TIFF.
+We consider the popular [xarray] Python package to be the primary in-memory 
+representation for AVL gridded datasets. The [xarray.Dataset] data model 
+represents a subset of the CDM, interprets CF compliant data correctly, and we 
+will follow this simplified CDM model for AVL gridded datasets in both 
+structure and terminology:
+
+[Unidata Common Data Model]: https://www.unidata.ucar.edu/software/netcdf-java/v4.6/CDM/
+[CF Conventions]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html
+[Zarr format v2]: https://zarr.readthedocs.io/en/stable/spec/v2.html
+[xarray]: http://xarray.pydata.org/
+[xarray.Dataset]: http://xarray.pydata.org/en/stable/user-guide/data-structures.html#dataset
+
+* A **dataset** is a container for _variables_. A dataset has metadata in form 
+  of a key-value mapping (global attributes).
+* A **variable** has N dimensions in a prescribed order, and each dimension 
+  has a name and a size. A variable contains the actual gridded data in form of 
+  an N-D data array that has the shape of the dimension sizes. For AVL, the 
+  data type of the array should be numeric, however also text strings and 
+  complex types are allowed. A variable has metadata in form of a key-value 
+  mapping (variable attributes). There are two types of variables, 
+  _coordinates_ and _data variables_.
+* **Coordinates** usually contain the labels for a dimension. For example, 
+  the coordinate `lon` has a 1-D array that contains 3600 longitude values for 
+  the dimension `lon` of size 3600. However, coordinates may also be 2-D. 
+  For example. a dataset using satellite geometry may provide its `lon` 
+  coordinate as a 2-D array for the dimensions `x` and `y` (for which should 
+  exists coordinates too).
+* All variables that are not coordinates are **data variables**. 
+  They provide the actual dataset’s data. For each of the dimensions used by a 
+  data variable, a corresponding coordinate must exist. For example, for a 
+  data variable `NDVI` with dimensions `time`, `lat`, `lon`, the coordinates
+  `time`, `lat`, `lon` must exist too.
+
+### Metadata
+
+Global and variable metadata shall follow the recommendations of the 
+[ESIP Attribute Convention for Data Discovery v1.3]. If other metadata 
+attributes are used, they should be covered by the [CF Conventions v1.8].
+
+[CF Conventions v1.8]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html
+[ESIP Attribute Convention for Data Discovery v1.3]: https://wiki.esipfed.org/Attribute_Convention_for_Data_Discovery_1-3
+
+### Spatial Reference
+
+The spatial dimensions of a data variable must be the innermost dimensions, 
+namely `lat`, `lon` for geographic (EPGS:4326, WGS-84) grids, and `y`, `x` 
+for other grids – in this order.
+Datasets that use a geographic (EPGS:4326, WGS-84) grid must provide the 
+1-D coordinates `lat` for dimension `lat` and `lon` for dimension `lon`.
+Datasets that use a non-geographic grid must provide the 1-D coordinates 
+`y` for dimension `y` and `x` for dimension `x`. 
+
+* In case the grid refers to a known spatial reference system (projected CRS), 
+  it must make use of the CRS encoding described in the 
+  [CF Conventions on Grid Mapping], i.e. add a variable `crs`.
+* In case the grid is referring to satellite viewing geometry must provide 
+  2-D coordinates `lat` and `lon` both having the dimensions `y`, `x` – 
+  in exactly this order, and apply the [CF Conventions on 2-D Lat and Lon].
+
+It is expected that the 1-D coordinates have a uniform spacing, i.e. there 
+should be a unique linear mapping between coordinate values and the image grid. 
+Ideally, the spacing should also be the same in x- and y-direction.
+Note, it is always a good practice to add geographic coordinates to 
+non-geographic, projected grids. Therefore, a dataset may also provide the 2-D 
+coordinates `lat` and `lon` in this case. Spatial coordinates must follow 
+the [CF Conventions on Coordinates].
+
+[CF Conventions on Grid Mapping]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#grid-mappings-and-projections
+[CF Conventions on 2-D Lat and Lon]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#_two_dimensional_latitude_longitude_coordinate_variables
+[CF Conventions on Coordinates]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#coordinate-types
+
+### Temporal Reference
+
+The temporal dimension of a data variables should be named `time`. It should be 
+the variable’s outermost dimension. A corresponding coordinate named `time` 
+must exists and the [CF Conventions on the Time Coordinate] must be applied.
+For datasets generated within AVL, it is recommended to use the unit 
+`seconds since 1970.01.01`.
+
+Data variables may contain other dimensions in between the temporal dimension 
+and the spatial dimensions, i.e. a variable’s dimensions may be 
+`time`, …,`lat`, `lon` (geographic CRS), or `time`, …, `y`, `x` 
+(non-geographic CRS) – both in exactly this order, where the ellipsis … refers 
+to such extra dimensions. If there is a requirement to store individual time 
+stamps per pixel value, this could still be done by adding a variable to the 
+dataset which would then be e.g. `pixel_time` with dimensions 
+`time`, `lat`, and `lon`. 
+
+[CF Conventions on the Time Coordinate]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#time-coordinate
+
+### Encoding of Flags
+
+For data variables that are encoded as flags using named bits or bit 
+masks/ranges, we strictly follow the [CF Convention on Flags]. 
+
+[CF Convention on Flags]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#flags
+
+### Scale/Offset Values
+
+Scale and offset encoding of bands / variables follows the 
+[CF Convention on Packed Data]. In practice, affected variables must have 
+attributes `scaling_factor` (default is 1) and `add_offset` (with default 0).  
+
+[CF Convention on Packed Data]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#packed-data
+
+### Multi-Band Products
+
+Individual bands of a dataset should be stored as variables. This is also the 
+case for multi-band products, like Sentinel-2, where each wavelength will be 
+represented by a separate variable, `B01`, `B02`, etc.
+
+### Dataset Examples
+
+* Global WGS-84: [dataset_global.zarr.zip](./data-samples/dataset_global.zarr.zip)
+* Projected CRS: [dataset_utm33n.zarr.zip](./data-samples/dataset_utm33n.zarr.zip)
+* Satellite Viewing Geometry: _TODO (forman)_
+
