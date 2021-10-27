@@ -1,6 +1,8 @@
 # AVL Dataset Convention
 
-Version 1.0
+Version 1.2, 2021-10-27
+
+
 
 ## Introduction
 
@@ -127,12 +129,50 @@ dataset which would then be e.g. `pixel_time` with dimensions
 
 [CF Conventions on the Time Coordinate]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#time-coordinate
 
+### Encoding of Units
+
+All variables that represent quantities must set the attribute  
+`units` according to the [CF Convention on Units]. 
+Even if the quantity is dimensionless, the `units` attribute must be set
+to indicate its dimensionless-ness by using the value `"1"`.
+
+[CF Convention on Units]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#units
+
 ### Encoding of Flags
 
 For data variables that are encoded as flags using named bits or bit 
 masks/ranges, we strictly follow the [CF Convention on Flags]. 
 
 [CF Convention on Flags]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#flags
+
+### Missing Values
+
+According to the [CF Convention on Missing Data], missing data should be 
+indicated by the variable attribute `_FillValue`. 
+However, Zarr does not define and interprete (decode) array attributes at all. 
+The Zarr equivalent of the CF attribute `_FillValue` is the array property 
+`fill_value` (not an attribute). `fill_value` can and should be set for all 
+data types including integers, also because it is given in raw units, and 
+that is, before `scaling_factor` and `add_offset` are applied (by xarray). 
+Zarr’s `fill_value` has the advantage, that data array chunks comprising 
+only `fill_value` values, can and should be dropped entirely. This can reduce 
+number of chunks dramatically and improve data access performance a lot for 
+many no-data chunks. In our case we should use `fill_value` to indicate 
+that a data cube’s grid cell does not contain a value at all, 
+it does not exist, it does not make sense, it had no input, etc.
+
+However, when reading a Zarr with Python xarray using `decode_cf=True` 
+(the new default), then xarray will also encode variable attribute 
+`_FillValue` and `missing_value` and mask the data accordingly. It will 
+unfortunately ignore `valid_min`, `valid_max`, `valid_range`.
+
+Missing values shall therefore be indicated by the Zarr array property 
+`fill_value`. In addition `valid_min`, `valid_max`, `valid_range`
+variable attributes may be given, but they will not be decoded. However,
+applications might still find them useful, e.g. xcube Viewer uses them,
+if provided as value range for mapping color bars.
+
+[CF Convention on Missing Data]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#missing-data
 
 ### Scale/Offset Values
 
