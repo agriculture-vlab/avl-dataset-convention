@@ -1,7 +1,6 @@
 # AVL Dataset Convention
 
-Version 1.2, 2021-10-27
-
+Version 1.2 Draft, 2021-10-27
 
 
 ## Introduction
@@ -187,6 +186,56 @@ attributes `scaling_factor` (default is 1) and `add_offset` (with default 0).
 Individual bands of a dataset should be stored as variables. This is also the 
 case for multi-band products, like Sentinel-2, where each wavelength will be 
 represented by a separate variable, `B01`, `B02`, etc.
+
+### Metadata Consolidation
+
+AVL datasets should provide consolidated dataset metadata in their root
+directories. This allows reading the metadata of datasets with many 
+variables more efficiently, especially when data is stored in Object Storage
+and every metadata file would need to fetched via an individual HTTP request. 
+
+The consolidated metadata file should be named `.zmetadata`,
+which is also the default name used by the Zarr format.
+
+The format of the consolidated metadata must be JSON. It is a 
+JSON object using the following structure:
+
+```json
+    {
+        "zarr_consolidated_format": 1
+        "metadata": {
+            ".zattrs": {…},
+            ".zgroup": {…},
+            "band_1/.zarray": {…},
+            "band_1/.zattrs": {…},
+            "band_2/.zarray": {…},
+            "band_2/.zattrs": {…},
+            …
+        }
+    }
+```
+
+### Zip Archives
+
+AVL Zarr datasets may be provided as Zip archives. Such Zip archives 
+should contain the contents of the archived Zarr directory in their root.
+In other words, the keys of the entries in such an archive should not 
+have a common prefix as is often the case when directories are zipped 
+for convenience. The name of a zipped Zarr dataset should be the original 
+Zarr dataset name plus the `.zip` extension. For example:
+
+Desired:
+
+    ${dataset-name}.zarr.zip/
+        .zarray
+        .zgroup
+        .zmetadata
+        band_1/
+        time/
+        …
+
+Zipping the Zarrs this way allows opening the Zarr datasets directly from the 
+Zip, e.g. for xarray this is `xarray.open_zarr("./dataset.zarr.zip")`.
 
 ### Dataset Examples
 
