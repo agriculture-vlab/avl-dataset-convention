@@ -19,6 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+import shutil
+
 import pyproj
 
 from dataset import from_crs84
@@ -28,8 +30,9 @@ from dataset import new_dataset
 def write_zarr(file_path: str, **dataset_kwargs):
     print(f'Writing {file_path}...')
     dataset = new_dataset(**dataset_kwargs)
-    # TODO (forman): zip here. so we don't need to do that manually
-    dataset.to_zarr(file_path)
+    dataset.to_zarr(file_path, consolidated=True)
+    shutil.make_archive(file_path, 'zip', file_path)
+    shutil.rmtree(file_path)
 
 
 def main():
