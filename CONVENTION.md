@@ -158,7 +158,7 @@ and every metadata file would need to fetched via an individual HTTP request.
 The consolidated metadata file should be named `.zmetadata`,
 which is also the default name used by the Zarr format.
 
-The consolidated format of the consolidated metadata must be JSON. It is a 
+The format of the consolidated metadata must be JSON. It is a 
 JSON object using the following structure:
 
 ```json
