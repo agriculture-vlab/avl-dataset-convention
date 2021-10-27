@@ -181,7 +181,7 @@ JSON object using the following structure:
 AVL Zarr datasets may be provided as Zip archives. Such Zip archives 
 should contain the contents of the archived Zarr directory in their root.
 In other words, the keys of the entries in such an archive should not 
-have a common prefix as it is often the case when directories are zipped 
+have a common prefix as is often the case when directories are zipped 
 for convenience. The name of a zipped Zarr dataset should be the original 
 Zarr dataset name plus the `.zip` extension. For example:
 
