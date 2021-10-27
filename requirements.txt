@@ -1,0 +1,6 @@
+click
+pyproj
+pytest
+pytest-cov
+xarray
+zarr
