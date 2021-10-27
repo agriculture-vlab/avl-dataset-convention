@@ -19,23 +19,55 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-import shutil
-
-import pyproj
-
-from dataset import from_crs84
-from dataset import new_dataset
+import click
 
 
-def write_zarr(file_path: str, **dataset_kwargs):
-    print(f'Writing {file_path}...')
-    dataset = new_dataset(**dataset_kwargs)
-    dataset.to_zarr(file_path, consolidated=True)
-    shutil.make_archive(file_path, 'zip', file_path)
-    shutil.rmtree(file_path)
-
-
+@click.group()
 def main():
+    """Command-line tool for the ESA AVL project."""
+    pass
+
+
+@main.command()
+@click.argument('dataset_path', metavar='DATASET')
+def verify(dataset_path: str):
+    """
+    Verify given dataset conforms to the AVL convention.
+    """
+    from .verify import verify_dataset
+    from .verify import WARNING
+    from .verify import ERROR
+
+    issues = verify_dataset(dataset_path)
+    if not issues:
+        click.echo('Ok, no issues found.')
+    else:
+        num_warnings = len([1 for level, _ in issues if level == WARNING])
+        num_errors = len([1 for level, _ in issues if level == ERROR])
+        click.echo(f'{num_errors} error(s)'
+                   f' and {num_warnings} warnings(s) found:')
+        for level, message in issues:
+            click.echo(f'{level}: {message}')
+        if num_errors > 0:
+            raise click.ClickException('Dataset is not compliant')
+
+
+@main.command()
+def new():
+    """
+    Generate AVL sample dataset into current working directory.
+    """
+    from .dataset import from_crs84
+    from .dataset import new_dataset
+    from zarr.storage import ZipStore
+    import pyproj
+
+    def write_zarr(file_path: str, **dataset_kwargs):
+        print(f'Writing {file_path}...')
+        dataset = new_dataset(**dataset_kwargs)
+        store = ZipStore(file_path + '.zip')
+        dataset.to_zarr(store)
+
     # Note, we take values for color_bar_name from
     # https://matplotlib.org/stable/tutorials/colors/colormaps.html
     # TODO (forman): use Sentinel-2 band names and flags here which better
@@ -61,7 +93,9 @@ def main():
             dict(
                 long_name='Variable B',
                 # standard_name='...',  # if exists
-                flag_meanings="quality_good sensor_nonfunctional outside_valid_range",
+                flag_meanings="quality_good"
+                              " sensor_nonfunctional"
+                              " outside_valid_range",
                 flag_values="1, 2, 3",
                 color_bar_name='tab10',
                 color_value_min=0,
