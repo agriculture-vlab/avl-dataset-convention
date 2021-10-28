@@ -1,47 +1,54 @@
-# avl-dataset-convention
+# Agriculture Virtual Lab (AVL)
 
-Provides a dataset convention and example datasets for the AVL project.
+This repository provides the documentation and a dedicated Python API for the 
+ESA project _Agriculture Virtual Lab (AVL)_.
 
+## Install AVL Python package
 
-## Install (from source)
+### From distribution
 
-Requires a conda Python environment with latest versions of 
-* `pyproj`
-* `s3fs` (optional)
-* `xarray`
-* `zarr`
+AVL has no distribution yet.
+
+### From sources
+
+The AVL Python package requires a conda Python environment:
+
+```bash
+$ conda install -c conda-forge pyproj s3fs xarray zarr
+```
+
+Or just `xcube`, which comes with all required packages 
+
+```bash
+$ conda install -c conda-forge xcube
+```
+
+Then, in the AVL project directory
 
 ```bash
 $ python setup.py develop
 ```
 
-## Functions
+## Build AVL documentation
 
-### Dataset compliance
+The AVL documentation is generated using [MkDocs](https://www.mkdocs.org/) 
+and plugin [MkApi](https://mkapi.daizutabi.net/). (Other `MkDocs` plugins 
+can be found [here](https://github.com/mkdocs/mkdocs/wiki/MkDocs-Plugins).)
 
-Verify a dataset is compliant to AVL convention.
+We require
 
-CLI:
 ```bash
-$ avl verify <path or url> 
+$ pip install mkdocs
+$ pip install mkapi
 ```
 
-Python API:
-```python
-import s3fs
-from avl.verify import verify_dataset
+Then
 
-s3 = s3fs.S3FileSystem(anon=True)
-store = s3fs.S3Map('agriculture-vlab-data-staging/avl/l3b/2020/bel/S2_L3B_LAI_31UFS.zarr', s3=s3)
-dataset = xr.open_zarr(store) 
-issues = verify_dataset(dataset)
-```
-
-### Example datasets
-
-Generate a set of AVL sample datasets:
-
-CLI:
 ```bash
-$ avl new
+$ mkdocs serve
 ```
+or
+```bash
+$ mkdocs build
+```
+

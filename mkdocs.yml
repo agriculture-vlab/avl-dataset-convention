@@ -1,0 +1,35 @@
+site_name: "Agriculture Virtual Lab"
+site_url: "http://127.0.0.1:8000/"   # TODO!
+copyright: Copyright (c) 2021 by the AVL Team
+# theme: readthedocs
+theme: mkdocs
+
+nav:
+  - Home: index.md
+  - User Guide:
+    - Overview: guide/index.md
+    - Exploitation System Guide: guide/exploitation/index.md
+    - Processing System Guide: guide/processing/index.md
+    - Tools Index: guide/tools.md
+    - Python API Reference: guide/python-api.md
+  - Datasets:
+    - Catalogue: datasets/catalogue.md
+    - Conventions: datasets/conventions.md
+  - Design:
+    - Overview: design/index.md
+    - Exploitation System Design: design/exploitation/index.md
+    - Processing System Design: design/processing/index.md
+    - Software Reuse: design/reuse.md
+    - Testing: design/testing.md
+  - About:
+    - Project: about/index.md
+    - License: about/license.md
+
+plugins:
+  - search
+  - mkapi
+
+markdown_extensions:
+  - toc:
+      permalink: "#"
+      baselevel: 2

@@ -64,6 +64,19 @@ def verify_dataset(
         dataset: Union[str, collections.Mapping, xr.Dataset],
         open_kwargs: Dict[str, Any] = None
 ) -> List[Issue]:
+    """
+    Verifies that given *dataset* complies to the AVL dataset conventions.
+
+    Args:
+        dataset: The dataset. May be an `xarray.Dataset`, a path,
+            or a Zarr store.
+        open_kwargs: Optional open parameters, ignored if *dataset*
+            is an `xarray.Dataset`.
+    Returns:
+        A list of issues. Each issue is a 2-tuple comprising an issue
+        severity level ("WARNING" or "ERROR") and the issue message.
+        An empty list indicates a 100%-compliance.
+    """
     if not isinstance(dataset, xr.Dataset):
         open_kwargs = open_kwargs or {}
         open_kwargs.pop('decode_cf', None)
