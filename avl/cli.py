@@ -29,16 +29,111 @@ def main():
 
 
 @main.command()
-@click.argument('dataset_path', metavar='DATASET')
-def verify(dataset_path: str):
+@click.option('--file', '-f', 'json_file_path',
+              metavar="JSON_FILE",
+              help="JSON file path")
+@click.option('--json', 'write_json_only',
+              is_flag=True,
+              help="Write the JSON_FILE and exit."
+                   " Ignored if JSON_FILE is not given.")
+def cat(json_file_path=None,
+        write_json_only=False):
     """
-    Verify given dataset conforms to the AVL convention.
+    Generate the markdown page of all available AVL datasets
+    in the AWS S3 buckets.
+    """
+
+    import json
+    import os
+
+    def load_descriptors_from_store():
+        from xcube.core.store import new_data_store
+        import traceback
+
+        store = new_data_store("s3",
+                               root='agriculture-vlab-data-staging',
+                               max_depth=5,
+                               storage_options=dict(anon=True))
+        descriptors = []
+        for data_id in store.get_data_ids():
+            click.echo(f"Fetching descriptor for {data_id!r}...")
+            try:
+                descriptor = store.describe_data(data_id)
+                descriptors.append(descriptor.to_dict())
+            except Exception as e:
+                click.echo(f"Error: {e}")
+                traceback_lines = list(traceback.format_tb(e.__traceback__))
+                descriptors.append(
+                    dict(data_id=data_id,
+                         error=dict(message=f'{e}',
+                                    traceback=traceback_lines))
+                )
+        return descriptors
+
+    def load_descriptors_from_file(path):
+        with open(path) as stream:
+            return json.load(stream)
+
+    def write_descriptors_to_file(path, descriptors):
+        with open(path, 'w') as stream:
+            json.dump(descriptors, stream, indent=2)
+
+    def write_catalogue(descriptors):
+        datasets_dir = 'docs/datasets'
+        data_dir = f'{datasets_dir}/data'
+        os.makedirs(data_dir, exist_ok=True)
+        with open(f'{datasets_dir}/catalogue.md', 'w') as fp_catalogue:
+            fp_catalogue.write("# AVL Dataset Catalogue\n\n")
+            for descriptor in descriptors:
+                data_id = descriptor.get('data_id', '?')
+                encoded_data_id = data_id.replace('/', '_')
+                data_json_file = f'{data_dir}/{encoded_data_id}.json'
+                has_error = 'error' in descriptor
+                fp_catalogue.write(
+                    f"* [{data_id}](data/{encoded_data_id}.json)"
+                    f"{' Error!' if has_error else ''}\n"
+                )
+                with open(data_json_file, 'w') as fp_data_id:
+                    json.dump(descriptor, fp_data_id, indent=2)
+
+    def get_descriptors():
+        if json_file_path:
+            if write_json_only:
+                descriptors = load_descriptors_from_store()
+                write_descriptors_to_file(json_file_path, descriptors)
+                return None
+            return load_descriptors_from_file(json_file_path)
+        else:
+            return load_descriptors_from_store()
+
+    def run():
+        click.echo(f"Reading descriptors...")
+        descriptors = get_descriptors()
+        if not descriptors:
+            return
+
+        click.echo(f"Converting {len(descriptors)} descriptors...")
+        write_catalogue(descriptors)
+
+    run()
+
+
+@main.command()
+@click.argument('dataset_path',
+                metavar='DATASET')
+@click.option('--level', '-l',
+              type=click.types.Choice(["ERROR", "WARNING"]),
+              default="WARNING",
+              help="Level of messages to include.")
+def ver(dataset_path: str, level: str):
+    """
+    Verify given dataset conforms to the AVL dataset convention.
     """
     from .verify import verify_dataset
     from .verify import WARNING
     from .verify import ERROR
 
-    issues = verify_dataset(dataset_path)
+    issues = verify_dataset(dataset_path, level=level)
     if not issues:
         click.echo('Ok, no issues found.')
     else:

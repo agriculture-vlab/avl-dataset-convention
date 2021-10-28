@@ -1,8 +1,8 @@
 site_name: "Agriculture Virtual Lab"
 site_url: "http://127.0.0.1:8000/"   # TODO!
 copyright: Copyright (c) 2021 by the AVL Team
-# theme: readthedocs
-theme: mkdocs
+theme: readthedocs
+# theme: mkdocs
 
 nav:
   - Home: index.md

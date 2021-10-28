@@ -2,15 +2,23 @@
 
 ## Dataset compliance
 
-Verify a dataset is compliant to AVL convention.
+Verify given dataset conforms to the AVL dataset convention.
 
 CLI:
 ```bash
-$ avl verify <path or url> 
+$ avl ver --help
+Usage: avl ver [OPTIONS] DATASET
+
+  Verify given dataset conforms to the AVL dataset convention.
+
+Options:
+  -l, --level [ERROR|WARNING]  Level of messages to include.
+  --help                       Show this message and exit. 
 ```
 
 Python API:
 ```python
+import xarray as xr
 import s3fs
 from avl.verify import verify_dataset
 
@@ -20,11 +28,37 @@ dataset = xr.open_zarr(store)
 issues = verify_dataset(dataset)
 ```
 
-## Example datasets
+## Synthetic example datasets
 
-Generate a set of AVL sample datasets:
+Generate AVL sample dataset into current working directory.
 
 CLI:
 ```bash
-$ avl new
+$ avl new --help
+Usage: avl new [OPTIONS]
+
+  Generate AVL sample dataset into current working directory.
+
+Options:
+  --help  Show this message and exit.
+```
+
+## Generate simple catalogue
+
+Generate the markdown page of all available AVL datasets in the AWS S3
+buckets.
+
+CLI:
+```bash
+$ avl cat --help
+Usage: avl cat [OPTIONS]
+
+  Generate the markdown page of all available AVL datasets in the AWS S3
+  buckets.
+
+Options:
+  -f, --file JSON_FILE  JSON file path
+  --json                Write the JSON_FILE and exit. Ignored if JSON_FILE is
+                        not given.
+  --help                Show this message and exit.
 ```
