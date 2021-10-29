@@ -29,6 +29,12 @@ Then, in the AVL project directory
 $ python setup.py develop
 ```
 
+Or with pip (so you can uninstall)
+
+```bash
+$ pip install --no-deps --editable .
+```
+
 ## Build AVL documentation
 
 The AVL documentation is generated using [MkDocs](https://www.mkdocs.org/) 

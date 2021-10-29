@@ -146,7 +146,7 @@ def check_xy_coords(ds: xr.Dataset) -> List[Issue]:
             issues += _check_crs(ds, 'crs')
         else:
             issues += _severe("coordinate variables 'x' and 'y' "
-                              "must be both 1-D")
+                              "must both be 1-D")
 
     lon = ds.get('lon')
     lat = ds.get('lat')
@@ -165,7 +165,7 @@ def check_xy_coords(ds: xr.Dataset) -> List[Issue]:
             yx_dims = 'y', 'x'
         else:
             issues += _severe("coordinate variables 'lon' and 'lat' "
-                              "must be both either 1-D or 2-D")
+                              "must both be either 1-D or 2-D")
 
     if yx_dims is None:
         issues += _severe('no valid spatial coordinates found')
@@ -208,8 +208,8 @@ def _check_mono_inc(ds, var_name):
     if np.issubdtype(var_diff.dtype, np.timedelta64):
         var_diff = var_diff.astype(np.float64)
     if not np.all(var_diff > 0):
-        issues += _severe(f"values of variable {var_name!r} must"
-                          " be monotonically increasing")
+        issues += _severe(f"values of variable {var_name!r} must be"
+                          " strictly monotonically increasing")
     return issues
 
 
@@ -218,8 +218,8 @@ def _check_mono_inc_or_dec(ds, var_name):
     var = ds[var_name]
     var_diff = var.diff(dim=var_name)
     if not (np.all(var_diff > 0) or np.all(var_diff < 0)):
-        issues += _severe(f"values of variable {var_name!r} must"
-                          " be monotonically increasing or decreasing")
+        issues += _severe(f"values of variable {var_name!r} must be"
+                          " strictly monotonically increasing or decreasing")
     return issues
 
 
