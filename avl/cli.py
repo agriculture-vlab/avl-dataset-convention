@@ -29,22 +29,49 @@ def main():
 
 
 @main.command()
-@click.option('--file', '-f', 'json_file_path',
-              metavar="JSON_FILE",
-              help="JSON file path")
-@click.option('--json', 'write_json_only',
+@click.option('--output', '-o', 'output_dir_path',
+              metavar="OUTPUT_DIR",
+              default=".",
+              help="Output directory. Defaults to current working directory.")
+@click.option('--file', '-f', 'cache_file_path',
+              metavar="CACHE_FILE",
+              default=None,
+              help="File that holds cached datasets' metadata (JSON format).")
+@click.option('--cache', 'write_cache_only',
               is_flag=True,
-              help="Write the JSON_FILE and exit."
+              help="Write the CACHE_FILE only and exit."
                    " Ignored if JSON_FILE is not given.")
-def cat(json_file_path=None,
-        write_json_only=False):
+def cat(output_dir_path='.',
+        cache_file_path=None,
+        write_cache_only=False):
     """
-    Generate the markdown page of all available AVL datasets
+    Generate the markdown catalogue of all available AVL datasets
     in the AWS S3 buckets.
+    Output will be generated into directory ${OUTPUT_DIR}/catalogue.
+
+    \b
+    Examples
+    --------
+
+    Generate markdown catalogue of all datasets (reads from S3):
+
+        $ avl cat
+
+    Just fetch datasets' metadata from S3 and write to datasets.json,
+    then exit:
+
+        $ avl cat -f datasets.json --json
+
+    Read datasets.json, then generate markdown catalogue:
+
+        $ avl cat -f datasets.json
+
     """
 
     import json
     import os
+
+    output_dir_path = output_dir_path or '.'
 
     def load_descriptors_from_store():
         from xcube.core.store import new_data_store
@@ -79,35 +106,37 @@ def cat(json_file_path=None,
             json.dump(descriptors, stream, indent=2)
 
     def write_catalogue(descriptors):
-        datasets_dir = 'docs/datasets'
-        data_dir = f'{datasets_dir}/data'
-        os.makedirs(data_dir, exist_ok=True)
-        with open(f'{datasets_dir}/catalogue.md', 'w') as fp_catalogue:
+        catalogue_dir = f'{output_dir_path}/catalogue'
+        datasets_dir_name = 'datasets'
+        datasets_dir = f'{catalogue_dir}/{datasets_dir_name}'
+        os.makedirs(datasets_dir, exist_ok=True)
+        with open(f'{catalogue_dir}/index.md', 'w') as fp_catalogue:
             fp_catalogue.write("# AVL Dataset Catalogue\n\n")
             for descriptor in descriptors:
                 data_id = descriptor.get('data_id', '?')
                 encoded_data_id = data_id.replace('/', '_')
-                data_json_file = f'{data_dir}/{encoded_data_id}.json'
+                rel_data_id_path = f'{datasets_dir_name}/{encoded_data_id}.json'
+                abs_data_id_path = f'{catalogue_dir}/{rel_data_id_path}'
                 has_error = 'error' in descriptor
                 fp_catalogue.write(
-                    f"* [{data_id}](data/{encoded_data_id}.json)"
+                    f"* [{data_id}]({rel_data_id_path})"
                     f"{' Error!' if has_error else ''}\n"
                 )
-                with open(data_json_file, 'w') as fp_data_id:
+                with open(abs_data_id_path, 'w') as fp_data_id:
                     json.dump(descriptor, fp_data_id, indent=2)
 
     def get_descriptors():
-        if json_file_path:
-            if write_json_only:
+        if cache_file_path:
+            if write_cache_only:
                 descriptors = load_descriptors_from_store()
-                write_descriptors_to_file(json_file_path, descriptors)
+                write_descriptors_to_file(cache_file_path, descriptors)
                 return None
-            return load_descriptors_from_file(json_file_path)
+            return load_descriptors_from_file(cache_file_path)
         else:
             return load_descriptors_from_store()
 
     def run():
-        click.echo(f"Reading descriptors...")
+        click.echo(f"Fetching descriptors...")
         descriptors = get_descriptors()
         if not descriptors:
             return
