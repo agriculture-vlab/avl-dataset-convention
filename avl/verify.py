@@ -147,7 +147,7 @@ def check_xy_coords(ds: xr.Dataset) -> List[Issue]:
             yx_dims = 'y', 'x'
         else:
             issues += _severe("coordinate variables 'lon' and 'lat' "
-                              "must be both either 1-D or 2-D")
+                              "must both be either 1-D or 2-D")
 
     if yx_dims is None:
         issues += _severe('no valid spatial coordinates found')
