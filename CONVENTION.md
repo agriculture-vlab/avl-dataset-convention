@@ -151,7 +151,7 @@ indicated by the variable attribute `_FillValue`.
 However, Zarr does not define or interpret (decode) array attributes at all. 
 The Zarr equivalent of the CF attribute `_FillValue` is the array property 
 `fill_value` (not an attribute). `fill_value` can and should be set for all 
-data types including integers, also because it is given in raw units, and 
+data types including integers, also because it is given in raw units,
 that is, before `scaling_factor` and `add_offset` are applied (by xarray). 
 Zarr’s `fill_value` has the advantage that data array chunks comprising 
 only `fill_value` values can and should be dropped entirely. This can reduce 
