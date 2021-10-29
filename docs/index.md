@@ -5,4 +5,4 @@
 # AVL Documentation
 
 
-TODO - include TOC
+<!-- TODO (PL): provide introduction (few lines of text) -->

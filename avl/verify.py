@@ -48,9 +48,9 @@ _EXPECTED_GLOBAL_ATTRS = [
 ]
 
 _EXPECTED_VARIABLE_ATTRS = [
-    'long_name',
-    'standard_name',
-    'units',
+    ('long_name', None),
+    ('standard_name', 'quantity'),
+    ('units', 'quantity'),
 ]
 
 WARNING = 'WARNING'
@@ -204,10 +204,10 @@ def _check_1d_coord(ds, var_name):
 def _check_mono_inc(ds, var_name):
     issues = _check_1d_coord(ds, var_name)
     var = ds[var_name]
-    diff_var = var.diff(dim=var_name)
-    if np.issubdtype(diff_var.dtype, np.timedelta64):
-        diff_var = diff_var.astype(np.float64)
-    if not np.all(diff_var > 0):
+    var_diff = var.diff(dim=var_name)
+    if np.issubdtype(var_diff.dtype, np.timedelta64):
+        var_diff = var_diff.astype(np.float64)
+    if not np.all(var_diff > 0):
         issues += _severe(f"values of variable {var_name!r} must"
                           " be monotonically increasing")
     return issues
@@ -216,8 +216,8 @@ def _check_mono_inc(ds, var_name):
 def _check_mono_inc_or_dec(ds, var_name):
     issues = _check_1d_coord(ds, var_name)
     var = ds[var_name]
-    diff_var = var.diff(dim=var_name)
-    if not (np.all(diff_var > 0) or np.all(diff_var < 0)):
+    var_diff = var.diff(dim=var_name)
+    if not (np.all(var_diff > 0) or np.all(var_diff < 0)):
         issues += _severe(f"values of variable {var_name!r} must"
                           " be monotonically increasing or decreasing")
     return issues
@@ -227,8 +227,9 @@ def _check_variable(ds: xr.Dataset, var_name: str) -> List[Issue]:
     if var_name not in ds:
         return _severe(f'missing variable {var_name!r}')
     issues = []
-    for attr_name in _EXPECTED_VARIABLE_ATTRS:
-        issues += _check_variable_attr(ds, var_name, attr_name)
+    for attr_name, var_type in _EXPECTED_VARIABLE_ATTRS:
+        if var_type == 'quantity' and _is_quantity_var(ds, var_name):
+            issues += _check_variable_attr(ds, var_name, attr_name)
     return issues
 
 
@@ -246,6 +247,13 @@ def _check_global_attr(ds: xr.Dataset,
     if attr_name not in ds.attrs:
         return _warning(f'missing global attribute {attr_name!r}')
     return []
+
+
+def _is_quantity_var(ds: xr.Dataset, var_name: str) -> bool:
+    if var_name == 'crs':
+        return False
+    var = ds[var_name]
+    return var.ndim > 0 and 'flag_names' not in var.attrs
 
 
 def _warning(msg: str) -> List[Issue]:

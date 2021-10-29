@@ -13,12 +13,13 @@ nav:
     - Tools Index: guide/tools.md
     - Python API Reference: guide/python-api.md
   - Datasets:
-    - Catalogue: datasets/catalogue.md
+    - Overview: datasets/index.md
     - Conventions: datasets/conventions.md
   - Design:
     - Overview: design/index.md
     - Exploitation System Design: design/exploitation/index.md
     - Processing System Design: design/processing/index.md
+    - Development: design/development.md
     - Software Reuse: design/reuse.md
     - Testing: design/testing.md
   - About:
