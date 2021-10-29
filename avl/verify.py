@@ -128,7 +128,7 @@ def check_xy_coords(ds: xr.Dataset) -> List[Issue]:
             issues += _check_crs(ds, 'crs')
         else:
             issues += _severe("coordinate variables 'x' and 'y' "
-                              "must be both 1-D")
+                              "must both be 1-D")
 
     lon = ds.get('lon')
     lat = ds.get('lat')
