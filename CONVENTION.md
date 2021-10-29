@@ -148,7 +148,7 @@ masks/ranges, we strictly follow the [CF Convention on Flags].
 
 According to the [CF Convention on Missing Data], missing data should be 
 indicated by the variable attribute `_FillValue`. 
-However, Zarr does not define and interprete (decode) array attributes at all. 
+However, Zarr does not define or interpret (decode) array attributes at all. 
 The Zarr equivalent of the CF attribute `_FillValue` is the array property 
 `fill_value` (not an attribute). `fill_value` can and should be set for all 
 data types including integers, also because it is given in raw units, and 
