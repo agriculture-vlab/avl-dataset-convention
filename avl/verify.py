@@ -201,7 +201,7 @@ def _check_mono_inc_or_dec(ds, var_name):
     diff_var = var.diff(dim=var_name)
     if not (np.all(diff_var > 0) or np.all(diff_var < 0)):
         issues += _severe(f"values of variable {var_name!r} must"
-                          " be monotonically increasing or decreasing")
+                          " be strictly monotonically increasing or decreasing")
     return issues
 
 
