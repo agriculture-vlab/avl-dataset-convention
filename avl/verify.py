@@ -191,7 +191,7 @@ def _check_mono_inc(ds, var_name):
         diff_var = diff_var.astype(np.float64)
     if not np.all(diff_var > 0):
         issues += _severe(f"values of variable {var_name!r} must"
-                          " be monotonically increasing")
+                          " be strictly monotonically increasing")
     return issues
 
 
